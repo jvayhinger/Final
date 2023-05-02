@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Final Project NASA Budget</title>
+	<script src="https://d3js.org/d3.v3.min.js"></script>
+	<style>
+    	text { 
+			font-family: Arial; 
+			font-size: 15px;
+		}
+		.axis path, .axis line {
+			fill: none;
+			stroke: black;
+			shape-rendering: crispEdges;
+		}
+		.tick text {
+			fill: black;
+			font-size: 11px;
+		}
+
+		rect {
+			stroke: white;
+		}
+	</style>
+</head>
+<body>
+	<a href="http://127.0.0.1:8887/Final_Description.html">Documentation Page</a>
+	<svg id="main" width="1400" height="1200">
+		<text id='label' x='625' y='80'>Yearly NASA Budget</text>
+		<g transform="translate(100,100)"></g>
+	</svg>
+
+	
+	<script>
+
+		var BAR_WIDTH = 10;
+		var CHART_HEIGHT = 200;
+
+		var nasaBudget = [];
+
+		function drawBarChart() 
+		{
+			
+
+			var maxValue = d3.max(nasaBudget);
+
+            var xAxis = d3.svg.axis()
+				.scale(d3.scale.linear()
+					.domain([1959, 2022])
+					.range([0, nasaBudget.length * 18]))
+				.orient("bottom");
+
+            var yAxis = d3.svg.axis()
+				.scale(d3.scale.linear()
+					.domain([0, maxValue])
+					.range([CHART_HEIGHT, 0]))
+				.orient("left");
+
+			d3.select("svg")
+				.append("g")
+				.attr("class", "axis")
+				.attr("transform", "translate(100, 100)")
+				.call(yAxis);
+
+			d3.select("svg")
+				.append("g")
+				.attr("class", "axis")
+				.attr("transform", "translate(100, 300)")
+				.call(xAxis);
+
+			var selection = d3.select('svg')
+				.select('g')
+				.selectAll('rect')
+				.data(nasaBudget);
+
+			selection.enter()
+				.append('rect')
+				.attr('height', function(d) 
+				{
+					var barlength = (d / maxValue) *
+						CHART_HEIGHT;
+					return barlength;
+				})
+				.attr('width', 15)
+				.attr('x', function(d, i) 
+				{
+
+					return i * 18;
+
+				})
+				.attr('y', function(d) 
+				{
+					var n = 1 - (d / maxValue);
+					return n * CHART_HEIGHT;
+				})
+
+                .on("click", function (d) 
+                {
+                    d3.select(this).style("fill", "#ff0000");
+                })
+
+                .on("mouseover", function(d)  
+                {
+                    d3.select(this).transition()
+                        .duration('50')
+                        .attr('opacity', '.75');
+                    d3.select('body')
+                        .append('div')
+                        .attr('class', 'tooltip')
+                        .style('position', 'absolute')
+                        .style('z-index', '10')
+                        .style('visibility', 'visible')
+                        .text(d);
+                })
+                
+                .on('mousemove', function() 
+                {
+                    d3.select('.tooltip')
+                        .style('top', (d3.event.pageY-50)+'px')
+                        .style('left',(d3.event.pageX+50)+'px');
+                })
+
+                .on('mouseout', function (d) 
+                {
+                    d3.select(this).transition()
+                        .duration('50')
+                        .attr('opacity', '1');
+
+                    d3.select('.tooltip').remove();
+                })
+
+        }
+
+
+		d3.csv('nasa-annual-budget.csv', function(data) 
+		{
+			var record = data[0];
+
+			// loop through all years, from 1959 to 2022
+			for (var year=1959; year<=2022; year++) 
+			{
+				var value = record[year];	
+				nasaBudget.push(+value);
+			}
+
+			drawBarChart();
+
+		});
+
+		
+	</script>
+
+</body>
+
+
+</html>
